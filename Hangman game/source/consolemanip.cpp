@@ -6,6 +6,15 @@
 namespace Console
 {
 
+Coord operator + (Coord lhs, Coord rhs)
+{
+    return {lhs.x + rhs.x, lhs.y + rhs.y};
+}
+Coord operator - (Coord lhs, Coord rhs)
+{
+    return {lhs.x - rhs.x, lhs.y - rhs.y};
+}
+
 const std::string CLEAR_SCREEN_STR = [] {
     std::string result;
     for (int i = 0; i < MAX_SCREEN_SIZE.y; ++i)
@@ -26,6 +35,7 @@ bool isEscape(char c)
       case '\f':
       case '\v':
       case '\0':
+      case NEXT_ROW:
         return true;
     }
     return false;
@@ -89,8 +99,8 @@ void moveCursor(Direction direction, ConsoleBuffer& buffer)
 void moveCursor(Coord pos, ConsoleBuffer& buffer)
 {
     if (buffer.cursor.x < 0 || buffer.cursor.y < 0 
-     || buffer.cursor.x >= MAX_SCREEN_SIZE.x 
-     || buffer.cursor.y >= MAX_SCREEN_SIZE.y)
+     || buffer.cursor.x > MAX_SCREEN_SIZE.x 
+     || buffer.cursor.y > MAX_SCREEN_SIZE.y)
       throw std::runtime_error("Cannot move cursor to invalid position");
     buffer.cursor = pos;
 }
@@ -100,7 +110,7 @@ void unformattedWrite(const std::string &str, ConsoleBuffer &buffer)
     if (str.empty()) return;
     if (buffer.cursor.x + str.size() > MAX_SCREEN_SIZE.x)
       throw std::runtime_error("Buffer overflow");
-    if (buffer.cache_max_y == MAX_SCREEN_SIZE.y)
+    if (buffer.cursor.y >= MAX_SCREEN_SIZE.y)
       throw std::runtime_error("Buffer overflow");
 
     int line = buffer.cursor.y;
@@ -147,9 +157,9 @@ void write(char c, ConsoleBuffer &buffer)
       break;
       case '\b':
         if (cur_pos.x == 0) {
-          if (cur_pos.y == 0) {}
-          else moveThisCursor({buffer.cache_max_x[cur_pos.y], 
-                               cur_pos.y - 1});
+          // if (cur_pos.y == 0) {}
+          // else moveThisCursor({buffer.cache_max_x[cur_pos.y], 
+          //                      cur_pos.y - 1});
         }
         else {
           moveThisCursor({cur_pos.x - 1, cur_pos.y});

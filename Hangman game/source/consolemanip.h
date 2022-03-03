@@ -7,6 +7,8 @@ namespace Console
 {
 
 struct Coord { int x, y; };
+Coord operator + (Coord, Coord);
+Coord operator - (Coord, Coord);
 
 constexpr Coord MAX_SCREEN_SIZE {200, 40};
 
@@ -27,6 +29,8 @@ struct StrAndPos
 };
 
 enum class Direction : int { UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3 };
+
+constexpr char NEXT_ROW = '\001';
 
 bool isEscape(char);
 

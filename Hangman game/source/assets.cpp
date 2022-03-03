@@ -23,6 +23,7 @@ const std::string WORDS[] {
 // L -> ╔   K -> ╗   J -> ╝   M -> ╚
 // Q -> ═   X -> ║   N -> ╬
 // W -> ╦   U -> ╣   T -> ╠   V -> ╩
+// reuse of implementation-defined character \c
 std::string toDrawString(const std::string &str)
 {
     std::string result(str);
@@ -52,6 +53,7 @@ std::string toDrawString(const std::string &str)
         MAKE_CASE('U', '\270');
         MAKE_CASE('T', '\314');
         MAKE_CASE('V', '\312');
+        MAKE_CASE('\n', Console::NEXT_ROW);
       }
     }
     return result;
@@ -73,23 +75,25 @@ const std::string GUESS_PROMPT = "Guess a letter: ";
 const std::string GOOD_MESSAGE = " is in the secret word";
 const std::string BAD_MESSAGE = " is not in the secret word";
 const std::string REPEAT_MESSAGE = "You already guessed the letter "; 
+const std::string SHOW_BAD_GUESSES = "Bad guesses: ";
 const std::string WIN_MESSAGE = "You win!";
 const std::string LOSE_MESSAGE = "You lose!";
 const std::string REVEAL_MESSAGE = "The secret word was: ";
 
-const Console::Coord TITLE_LINE = {0, 0};
-const Console::Coord HANGMAN_IMAGE_LINE = {0, 1};
+const Console::Coord TITLE_POS = {5, 0};
+const Console::Coord HANGMAN_IMAGE_POS = {2, 1};
 const Console::Coord WORD_LINE = {0, 11};
 const Console::Coord GUESS_PROMPT_LINE = {0, 14};
 const Console::Coord GUESS_FEEDBACK_LINE = {0, 13};
+const Console::Coord BAD_GUESSES_POS = {22, 3};
 
 const Console::StrAndPos IMAGES_UPDATES[] {
-    {"O", {11, 4}},
-    {"|", {11, 5}},
-    {"/", {10, 5}},
-    {"\\", {12, 5}},
-    {"/", {10, 6}},
-    {"\\", {12, 6}}
+    {"O", HANGMAN_IMAGE_POS + Console::Coord{11, 3}},
+    {"|", HANGMAN_IMAGE_POS + Console::Coord{11, 4}},
+    {"/", HANGMAN_IMAGE_POS + Console::Coord{10, 4}},
+    {"\\", HANGMAN_IMAGE_POS + Console::Coord{12, 4}},
+    {"/", HANGMAN_IMAGE_POS + Console::Coord{10, 5}},
+    {"\\", HANGMAN_IMAGE_POS + Console::Coord{12, 5}}
 };
 
 const int MAX_BAD_GUESSES = 6;

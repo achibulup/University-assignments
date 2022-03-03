@@ -35,8 +35,13 @@ Ostream& Ostream::operator << (char c)
 Ostream& Ostream::operator << (const std::string &str)
 {
     if (!*this) throw std::runtime_error("Ostream::operator<< called on an invalid buffer");
+    int start_x = this->buffer->cursor.x;
     for (auto it = str.begin(); it != str.end(); ++it) {
-      if (isEscape(*it)) write(*it, *this->buffer);
+      if (isEscape(*it)) {
+        if (*it == Console::NEXT_ROW) 
+          this->setPosition({start_x, this->buffer->cursor.y + 1});
+        else write(*it, *this->buffer);
+      }
       else {
         auto end_of_token = std::find_if(it, str.end(), isEscape);
         std::string token = str.substr(it - str.begin(), end_of_token - it);

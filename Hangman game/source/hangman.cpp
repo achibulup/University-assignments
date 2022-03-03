@@ -12,9 +12,8 @@ enum class GameProgress {Playing, Won, Lost};
 struct GameState
 {
     std::string secret_word;
-    int bad_guesses;
-    int guesses;
     std::vector<char> guessed_letters;
+    std::vector<char> bad_guesses;
     GameProgress progress;
 }state;
 
@@ -73,26 +72,25 @@ void updateImage(int bad_guesses, GameState &game_state = state)
 void initGame()
 {
     state.secret_word = chooseWord();
-    state.bad_guesses = 0;
-    state.guesses = 0;
     state.guessed_letters.clear();
+    state.bad_guesses.clear();
     state.progress = GameProgress::Playing;
 
-    Console::cout.setPosition(TITLE_LINE) << TITLE;
-    Console::cout.setPosition(HANGMAN_IMAGE_LINE) << HANGMAN_IMAGE;
+    Console::cout.setPosition(TITLE_POS) << TITLE;
+    Console::cout.setPosition(HANGMAN_IMAGE_POS) << HANGMAN_IMAGE;
 }
 
 void playSequence()
 {
-    std::string guess_str 
-        = getGuessStr(state.secret_word, state.guessed_letters);
+    Console::Coord cur_bad_guess_pos = BAD_GUESSES_POS;
 
     while(true) {
+      std::string guess_str = getGuessStr(state.secret_word, 
+                                          state.guessed_letters);
       Console::cout.setPosition(WORD_LINE).clearLine() << guess_str;
       Console::cout.setPosition(GUESS_PROMPT_LINE).clearLine() << GUESS_PROMPT;
-      
-      Console::cout.flush();
-      if (state.bad_guesses == MAX_BAD_GUESSES) {
+
+      if (int(state.bad_guesses.size()) == MAX_BAD_GUESSES) {
         state.progress = GameProgress::Lost;
         break;
       }
@@ -100,6 +98,8 @@ void playSequence()
         state.progress = GameProgress::Won;
         break;
       }
+
+      Console::cout.flush();
 
       std::string str;
       getline(Console::cin, str);
@@ -117,14 +117,18 @@ void playSequence()
       }
       addGuessedLetter(guess, state);
       if (goodGuess(guess, state.secret_word)) {
-        guess_str = getGuessStr(state.secret_word, state.guessed_letters);
-        Console::cout.setPosition(WORD_LINE).clearLine() << guess_str;
         Console::cout.setPosition(GUESS_FEEDBACK_LINE).clearLine();
         Console::cout << guess << GOOD_MESSAGE;
       } else {
-        updateImage(++state.bad_guesses, state);
+        state.bad_guesses.push_back(guess);
+        updateImage(state.bad_guesses.size(), state);
         Console::cout.setPosition(GUESS_FEEDBACK_LINE).clearLine();
         Console::cout << guess << BAD_MESSAGE;
+
+        
+        Console::cout.setPosition(BAD_GUESSES_POS) << SHOW_BAD_GUESSES;
+        cur_bad_guess_pos.y += 1;
+        Console::cout.setPosition(cur_bad_guess_pos) << guess;
       }
     }
 

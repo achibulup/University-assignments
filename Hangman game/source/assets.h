@@ -23,15 +23,17 @@ extern const std::string GUESS_PROMPT;
 extern const std::string GOOD_MESSAGE;
 extern const std::string BAD_MESSAGE;
 extern const std::string REPEAT_MESSAGE;
+extern const std::string SHOW_BAD_GUESSES;
 extern const std::string WIN_MESSAGE;
 extern const std::string LOSE_MESSAGE;
 extern const std::string REVEAL_MESSAGE;
 
-extern const Console::Coord TITLE_LINE;
-extern const Console::Coord HANGMAN_IMAGE_LINE;
+extern const Console::Coord TITLE_POS;
+extern const Console::Coord HANGMAN_IMAGE_POS;
 extern const Console::Coord WORD_LINE;
 extern const Console::Coord GUESS_PROMPT_LINE;
 extern const Console::Coord GUESS_FEEDBACK_LINE;
+extern const Console::Coord BAD_GUESSES_POS;
 
 extern const Console::StrAndPos IMAGES_UPDATES[];
 
