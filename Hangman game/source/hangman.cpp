@@ -77,13 +77,13 @@ void initGame()
     state.progress = GameProgress::Playing;
 
     Console::cout.setPosition(TITLE_POS) << TITLE;
-    Console::cout.setPosition(HANGMAN_IMAGE_POS) << HANGMAN_IMAGE;
 }
 
 void playSequence()
 {
-    Console::Coord cur_bad_guess_pos = BAD_GUESSES_POS;
+    Console::cout.setPosition(HANGMAN_IMAGE_POS) << HANGMAN_IMAGE;
 
+    Console::Coord cur_bad_guess_pos = BAD_GUESSES_POS;
     while(true) {
       std::string guess_str = getGuessStr(state.secret_word, 
                                           state.guessed_letters);
