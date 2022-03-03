@@ -13,17 +13,6 @@ const std::string WORDS[] {
     "coriander", "lavender", "mint", "rose", "dill", "chive", "cabbage", 
     "broccoli", "spinach", "lettuce", "cauliflower", "mushroom"
 };
-
-/// corresponds to the virtual terminal line drawing characters
-// l -> ┌   k -> ┐   j -> ┘   m -> └
-// q -> ─   x -> │   n -> ┼
-// w -> ┬   u -> ┤   t -> ├   v -> ┴
-/// additional characters
-// s -> \ .
-// L -> ╔   K -> ╗   J -> ╝   M -> ╚
-// Q -> ═   X -> ║   N -> ╬
-// W -> ╦   U -> ╣   T -> ╠   V -> ╩
-// reuse of implementation-defined character \c
 std::string toDrawString(const std::string &str)
 {
     std::string result(str);

@@ -6,6 +6,7 @@ namespace Hangman
 {
 extern const std::string WORDS[];
 
+
 /// corresponds to the virtual terminal line drawing characters
 // l -> ┌   k -> ┐   j -> ┘   m -> └
 // q -> ─   x -> │   n -> ┼
@@ -15,6 +16,7 @@ extern const std::string WORDS[];
 // L -> ╔   K -> ╗   J -> ╝   M -> ╚
 // Q -> ═   X -> ║   N -> ╬
 // W -> ╦   U -> ╣   T -> ╠   V -> ╩
+// '\n' -> NEXT_ROW
 std::string toDrawString(const std::string &str);
 
 extern const std::string TITLE;
