@@ -1,6 +1,6 @@
 #include <iostream>
 #include <cstdio>
-#include <cstring>
+#include <algorithm>
 #include "consolemanip.h"
 
 namespace Console
@@ -105,7 +105,8 @@ void moveCursor(Coord pos, ConsoleBuffer& buffer)
     buffer.cursor = pos;
 }
 
-void unformattedWrite(const std::string &str, ConsoleBuffer &buffer)
+///
+void checkOverflow(const std::string &str, ConsoleBuffer &buffer)
 {
     if (str.empty()) return;
     if (buffer.cursor.x + str.size() > MAX_SCREEN_SIZE.x)
@@ -113,6 +114,13 @@ void unformattedWrite(const std::string &str, ConsoleBuffer &buffer)
     if (buffer.cursor.y >= MAX_SCREEN_SIZE.y)
       throw std::runtime_error("Buffer overflow");
 
+}
+
+void unformattedWrite(const std::string &str, ConsoleBuffer &buffer)
+{
+    if (str.empty()) return;
+    checkOverflow(str, buffer);
+     
     int line = buffer.cursor.y;
     int old_max_x = buffer.cache_max_x[line];
 
@@ -120,13 +128,13 @@ void unformattedWrite(const std::string &str, ConsoleBuffer &buffer)
       buffer.cache_max_y = line + 1;
       
     if (buffer.cursor.x > old_max_x) {
-      memset(buffer.buffer[line] + old_max_x, ' ', 
-             buffer.cursor.x - old_max_x);
+      std::fill_n(buffer.buffer[line] + old_max_x, 
+                  buffer.cursor.x - old_max_x, ' ');
       buffer.cache_max_x[line] = buffer.cursor.x;
     }
 
-    memcpy(buffer.buffer[line] + buffer.cursor.x, 
-           str.data(), str.size());
+    std::copy_n(str.data(), str.size(),
+                buffer.buffer[line] + buffer.cursor.x);
     buffer.cursor.x += str.size();
     if (buffer.cursor.x > buffer.cache_max_x[line]) {
       buffer.cache_max_x[line] = buffer.cursor.x;
@@ -191,11 +199,7 @@ void clearLine(ConsoleBuffer &buffer)
 
 void clearConsole(ConsoleBuffer &buffer)
 {
-    memset(buffer.buffer, ' ', sizeof(buffer.buffer[0]) * buffer.cache_max_y);
-    for (int i = 0; i < buffer.cache_max_y; ++i)
-      buffer.buffer[i][MAX_SCREEN_SIZE.x] = 0;
-    buffer.cursor = {0, 0};
-    buffer.cache_max_y = 0;
+    buffer = ConsoleBuffer();
 }
 
 void render(const ConsoleBuffer &buffer)

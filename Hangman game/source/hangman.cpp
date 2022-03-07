@@ -7,7 +7,7 @@
 namespace Hangman
 {
 
-enum class GameProgress {Playing, Won, Lost};
+enum class GameProgress {PLAYING, WON, LOST};
 
 struct GameState
 {
@@ -15,9 +15,14 @@ struct GameState
     std::vector<char> guessed_letters;
     std::vector<char> bad_guesses;
     GameProgress progress;
-}state;
+}global_state;
 
+const char INVALID = '\0';
 
+void refreshPrompt()
+{
+    Console::cout.setPosition(GUESS_PROMPT_LINE).clearLine() << GUESS_PROMPT;
+}
 
 std::string getGuessStr(std::string_view secret_word, 
                         const std::vector<char> &guessed_letters)
@@ -33,16 +38,32 @@ std::string getGuessStr(std::string_view secret_word,
     return result;
 }
 
-bool isRepeated(char guess, GameState &game_state = state)
+char getPlayerGuess()
 {
-    return std::find(game_state.guessed_letters.begin(), 
-                     game_state.guessed_letters.end(), guess) 
-        != game_state.guessed_letters.end();
+    std::string input;
+    getline(Console::cin, input);
+    if (input.size() != 1) {
+      Console::cout << INVALID_GUESS_MESSAGE;
+      return INVALID;
+    }
+    char c = input[0];
+    if (!std::isalpha(c)) {
+      Console::cout << INVALID_GUESS_MESSAGE;
+      return INVALID;
+    }
+    return std::tolower(static_cast<unsigned char>(c));
 }
 
-void addGuessedLetter(char guess, GameState &game_state = state)
+bool isRepeated(char guess, GameState &state = global_state)
 {
-    game_state.guessed_letters.push_back(guess);
+    return std::find(state.guessed_letters.begin(), 
+                     state.guessed_letters.end(), guess) 
+        != state.guessed_letters.end();
+}
+
+void addGuessedLetter(char guess, GameState &state = global_state)
+{
+    state.guessed_letters.push_back(guess);
 }
 
 bool goodGuess(char guess, std::string_view secret_word)
@@ -63,82 +84,83 @@ bool checkWin(std::string_view secret_word,
         == secret_word.end();
 }
 
-void updateImage(int bad_guesses, GameState &game_state = state)
+bool checkLose(const std::vector<char> &bad_guesses)
 {
-    int update_index = bad_guesses - 1;
-    Console::cout << IMAGES_UPDATES[update_index];
+    return bad_guesses.size() >= MAX_BAD_GUESSES;
 }
 
-void initGame()
+void updateImage(int bad_guesses, GameState &state = global_state)
+{
+    int update_index = bad_guesses - 1;
+    auto rendered = IMAGES_UPDATES[update_index];
+    rendered.pos = rendered.pos + HANGMAN_IMAGE_POS;
+    Console::cout << rendered;
+}
+
+void update(char guess, GameState &state = global_state)
+{
+    if (isRepeated(guess, state)) {
+      Console::cout.setPosition(GUESS_FEEDBACK_LINE).clearLine();
+      Console::cout << REPEAT_MESSAGE << guess;
+      return;
+    }
+    addGuessedLetter(guess, state);
+    if (goodGuess(guess, state.secret_word)) {
+      Console::cout.setPosition(GUESS_FEEDBACK_LINE).clearLine();
+      Console::cout << guess << GOOD_MESSAGE;
+
+      std::string guess_str = getGuessStr(state.secret_word, 
+                                          state.guessed_letters);
+      Console::cout.setPosition(WORD_LINE).clearLine() << guess_str;
+
+      if (checkWin(state.secret_word, state.guessed_letters))
+        state.progress = GameProgress::WON;
+    } else {
+      state.bad_guesses.push_back(guess);
+      updateImage(state.bad_guesses.size(), state);
+      Console::cout.setPosition(GUESS_FEEDBACK_LINE).clearLine();
+      Console::cout << guess << BAD_MESSAGE;
+
+      Console::cout.setPosition(BAD_GUESSES_POS) << SHOW_BAD_GUESSES;
+      Console::Coord bad_guess_pos = BAD_GUESSES_POS;
+      bad_guess_pos.y += state.bad_guesses.size();
+      Console::cout.setPosition(bad_guess_pos) << guess;
+
+      if (checkLose(state.bad_guesses))
+        state.progress = GameProgress::LOST;
+    }
+}
+
+void initGame(GameState &state = global_state)
 {
     state.secret_word = chooseWord();
     state.guessed_letters.clear();
     state.bad_guesses.clear();
-    state.progress = GameProgress::Playing;
+    state.progress = GameProgress::PLAYING;
 
     Console::cout.setPosition(TITLE_POS) << TITLE;
 }
 
-void playSequence()
+void playSequence(GameState &state = global_state)
 {
     Console::cout.setPosition(HANGMAN_IMAGE_POS) << HANGMAN_IMAGE;
+    Console::cout.setPosition(WORD_LINE).clearLine();
+    Console::cout << getGuessStr(state.secret_word, state.guessed_letters);
 
-    Console::Coord cur_bad_guess_pos = BAD_GUESSES_POS;
-    while(true) {
-      std::string guess_str = getGuessStr(state.secret_word, 
-                                          state.guessed_letters);
-      Console::cout.setPosition(WORD_LINE).clearLine() << guess_str;
-      Console::cout.setPosition(GUESS_PROMPT_LINE).clearLine() << GUESS_PROMPT;
-
-      if (int(state.bad_guesses.size()) == MAX_BAD_GUESSES) {
-        state.progress = GameProgress::Lost;
-        break;
-      }
-      if (checkWin(state.secret_word, state.guessed_letters)) {
-        state.progress = GameProgress::Won;
-        break;
-      }
-
+    while(state.progress == GameProgress::PLAYING) {
+      refreshPrompt();
       Console::cout.flush();
-
-      std::string str;
-      getline(Console::cin, str);
-      str = toLower(str);
-      if (str.size() != 1) {
-        Console::cout.setPosition(GUESS_FEEDBACK_LINE).clearLine();
-        Console::cout << "Please enter a single letter." << '\n';
-        continue;
-      }
-      char guess = str[0];
-      if (isRepeated(guess, state)) {
-        Console::cout.setPosition(GUESS_FEEDBACK_LINE).clearLine();
-        Console::cout << REPEAT_MESSAGE << guess;
-        continue;
-      }
-      addGuessedLetter(guess, state);
-      if (goodGuess(guess, state.secret_word)) {
-        Console::cout.setPosition(GUESS_FEEDBACK_LINE).clearLine();
-        Console::cout << guess << GOOD_MESSAGE;
-      } else {
-        state.bad_guesses.push_back(guess);
-        updateImage(state.bad_guesses.size(), state);
-        Console::cout.setPosition(GUESS_FEEDBACK_LINE).clearLine();
-        Console::cout << guess << BAD_MESSAGE;
-
-        
-        Console::cout.setPosition(BAD_GUESSES_POS) << SHOW_BAD_GUESSES;
-        cur_bad_guess_pos.y += 1;
-        Console::cout.setPosition(cur_bad_guess_pos) << guess;
-      }
+      char guess = getPlayerGuess();
+      update(guess, state);
     }
 
 }
 
-void ending()
+void ending(GameState &state = global_state)
 {
     Console::cout.setPosition(GUESS_PROMPT_LINE).clearLine();
     Console::cout.setPosition(GUESS_FEEDBACK_LINE).clearLine();
-    if (state.progress == GameProgress::Won) {
+    if (state.progress == GameProgress::WON) {
       Console::cout << WIN_MESSAGE << '\n';
     } 
     else {
@@ -150,7 +172,7 @@ void ending()
 
 void cleanUp()
 {
-    std::cout << "Press enter to continue...";
+    std::cout << CONTINUE_PROMPT;
     std::cin.get();
     Console::clearConsole();
 }

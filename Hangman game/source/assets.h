@@ -25,10 +25,12 @@ extern const std::string GUESS_PROMPT;
 extern const std::string GOOD_MESSAGE;
 extern const std::string BAD_MESSAGE;
 extern const std::string REPEAT_MESSAGE;
+extern const std::string INVALID_GUESS_MESSAGE;
 extern const std::string SHOW_BAD_GUESSES;
 extern const std::string WIN_MESSAGE;
 extern const std::string LOSE_MESSAGE;
 extern const std::string REVEAL_MESSAGE;
+extern const std::string CONTINUE_PROMPT;
 
 extern const Console::Coord TITLE_POS;
 extern const Console::Coord HANGMAN_IMAGE_POS;
