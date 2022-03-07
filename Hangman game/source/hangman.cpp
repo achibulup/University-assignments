@@ -19,10 +19,8 @@ struct GameState
 
 const char INVALID = '\0';
 
-void refreshPrompt()
-{
-    Console::cout.setPosition(GUESS_PROMPT_LINE).clearLine() << GUESS_PROMPT;
-}
+
+
 
 std::string getGuessStr(std::string_view secret_word, 
                         const std::vector<char> &guessed_letters)
@@ -36,6 +34,18 @@ std::string getGuessStr(std::string_view secret_word,
       else result += '_';
     }
     return result;
+}
+
+void showInitial(GameState &state = global_state)
+{
+    Console::cout.setPosition(HANGMAN_IMAGE_POS) << HANGMAN_IMAGE;
+    Console::cout.setPosition(WORD_LINE).clearLine();
+    Console::cout << getGuessStr(state.secret_word, state.guessed_letters);
+}
+
+void refreshPrompt(GameState& = global_state)
+{
+    Console::cout.setPosition(GUESS_PROMPT_LINE).clearLine() << GUESS_PROMPT;
 }
 
 char getPlayerGuess()
@@ -141,21 +151,6 @@ void initGame(GameState &state = global_state)
     Console::cout.setPosition(TITLE_POS) << TITLE;
 }
 
-void playSequence(GameState &state = global_state)
-{
-    Console::cout.setPosition(HANGMAN_IMAGE_POS) << HANGMAN_IMAGE;
-    Console::cout.setPosition(WORD_LINE).clearLine();
-    Console::cout << getGuessStr(state.secret_word, state.guessed_letters);
-
-    while(state.progress == GameProgress::PLAYING) {
-      refreshPrompt();
-      Console::cout.flush();
-      char guess = getPlayerGuess();
-      update(guess, state);
-    }
-
-}
-
 void ending(GameState &state = global_state)
 {
     Console::cout.setPosition(GUESS_PROMPT_LINE).clearLine();
@@ -170,6 +165,18 @@ void ending(GameState &state = global_state)
     Console::cout.flush();
 }
 
+void playSequence(GameState &state = global_state)
+{
+    showInitial(state);
+    while(state.progress == GameProgress::PLAYING) {
+      refreshPrompt();
+      Console::cout.flush();
+      char guess = getPlayerGuess();
+      update(guess, state);
+    }
+    ending(state);
+}
+
 void cleanUp()
 {
     std::cout << CONTINUE_PROMPT;
@@ -181,7 +188,6 @@ void run()
 {
     initGame();
     playSequence();
-    ending();
     cleanUp();
 }
 
